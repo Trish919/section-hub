@@ -1,6 +1,7 @@
 // ---------- 1. SETTINGS ----------
 const CATEGORIES = ["Study", "Personal", "Event", "Work", "Other"];
 const STORAGE_KEY = "duely-deadlines-v1";
+const SHARE_URL = "https://trish919.github.io/section-hub/";   // your public link, included in every shared message
 
 // ---------- 2. STATE ----------
 // Each deadline looks like:
@@ -487,18 +488,17 @@ async function shareList() {
   const heading = activeFilter === "All" ? "Coming up:" : `Coming up (${activeFilter}):`;
   const lines = items.map((d) =>
     `• ${d.title}, ${shortDate(d.due)}${daysUntil(d.due) < 0 ? " (overdue)" : ""}`);
-  const text = [heading, ...lines].join("\n");
-  const url = location.href.split(/[?#]/)[0];
+  const text = [heading, ...lines, "", `Open: ${SHARE_URL}`].join("\n");
 
   if (navigator.share) {                              // phones: opens the share sheet (Messenger, Viber...)
     try {
-      await navigator.share({ title: "Trishabel", text, url });
+      await navigator.share({ title: "Trishabel", text });
     } catch (err) {
-      if (err.name !== "AbortError") copyText(`${text}\n${url}`);   // AbortError = they closed the sheet
+      if (err.name !== "AbortError") copyText(text);   // AbortError = they closed the sheet
     }
     return;
   }
-  copyText(`${text}\n${url}`);                        // laptops: copy to clipboard
+  copyText(text);                                     // laptops: copy to clipboard
 }
 
 document.getElementById("share-btn").addEventListener("click", shareList);
