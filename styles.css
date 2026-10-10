@@ -302,3 +302,8 @@ dialog h2 { font-size: 1.125rem; margin-bottom: var(--space-2); }
   white-space: nowrap;
   border: 0;
 }
+
+/* Placeholder text is a bit smaller so the longer example fits on small phones.
+   (The typed text stays 16px, which stops iPhones from zooming in.) */
+.quick input { text-overflow: ellipsis; padding-left: 0.875rem; padding-right: 0.5rem; }
+.quick input::placeholder { font-size: 0.8125rem; }

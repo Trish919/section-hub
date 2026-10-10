@@ -348,13 +348,20 @@ function monthIndex(name) {
   return MONTH_NAMES.indexOf(name.slice(0, 3).toLowerCase());
 }
 
-// "oct 20" -> the next October 20 (this year, or next year if it already passed)
-function buildDate(month, day) {
+// "oct 20" -> the next October 20 (this year, or next year if it already passed).
+// "oct 20, 2026" -> that exact year, unless the year is already over (see note below).
+function buildDate(month, day, yearText) {
   const today = startOfToday();
-  let d = new Date(today.getFullYear(), month, day);
+  const thisYear = today.getFullYear();
+  const year = yearText ? +yearText : thisYear;
+
+  let d = new Date(year, month, day);
   if (d.getMonth() !== month) return null;           // "feb 30" does not exist
-  if (d < today) {
-    d = new Date(today.getFullYear() + 1, month, day);
+
+  // No year typed, or a year that is already over (like a birth year):
+  // use the next time this date comes around.
+  if ((!yearText || year < thisYear) && d < today) {
+    d = new Date(thisYear + 1, month, day);
     if (d.getMonth() !== month) return null;
   }
   return d;
@@ -373,10 +380,10 @@ const DATE_RULES = [
     toDate: () => shiftDays(0) },
   { re: /\b(tomorrow|tmrw)\b/i,
     toDate: () => shiftDays(1) },
-  { re: new RegExp(`\\b${MONTH_RE}\\.? (\\d{1,2})(?:st|nd|rd|th)?\\b`, "i"),
-    toDate: (m) => buildDate(monthIndex(m[1]), +m[2]) },
-  { re: new RegExp(`\\b(\\d{1,2})(?:st|nd|rd|th)? ${MONTH_RE}\\b`, "i"),
-    toDate: (m) => buildDate(monthIndex(m[2]), +m[1]) },
+  { re: new RegExp(`\\b${MONTH_RE}\\.? (\\d{1,2})(?:st|nd|rd|th)?(?:,? (\\d{4}))?\\b`, "i"),
+    toDate: (m) => buildDate(monthIndex(m[1]), +m[2], m[3]) },
+  { re: new RegExp(`\\b(\\d{1,2})(?:st|nd|rd|th)? ${MONTH_RE}(?:,? (\\d{4}))?\\b`, "i"),
+    toDate: (m) => buildDate(monthIndex(m[2]), +m[1], m[3]) },
   { re: new RegExp(`\\b(?:next )?${WEEKDAY_RE}\\b`, "i"),
     toDate: (m) => {
       const target = DAY_NAMES.indexOf(m[1].slice(0, 3).toLowerCase());
@@ -409,10 +416,12 @@ function parseQuickAdd(input) {
     break;
   }
 
+  const EDGE = /^[\s\-\u2013\u2014|:,]+|[\s\-\u2013\u2014|:,]+$/g;   // leftover - | : , at the ends
   const title = text
     .replace(/\s+/g, " ")
+    .replace(EDGE, "")
     .replace(/\b(by|on|due|until)\s*$/i, "")           // "report by fri" -> "report"
-    .trim()
+    .replace(EDGE, "")
     .slice(0, 80);
 
   if (!title) return { error: "Add what it is, for example: ERD report fri" };
@@ -428,7 +437,7 @@ function shortDate(iso) {
 
 // One line of feedback under the input. It resets to the hint after a few seconds.
 const noteEl = document.getElementById("quick-note");
-const DEFAULT_NOTE = 'Try "ERD report fri", "quiz in 3 days" or "birthday oct 20 #personal"';
+const DEFAULT_NOTE = 'Try "BUSEVAL - Midterms | Friday", "quiz in 3 days" or "Trish Birthday - Sept 19, 2007"';
 let noteTimer = null;
 
 function setNote(message, isError = false) {
@@ -492,7 +501,7 @@ async function shareList() {
 
   if (navigator.share) {                              // phones: opens the share sheet (Messenger, Viber...)
     try {
-      await navigator.share({ title: "Trishabel", text });
+      await navigator.share({ title: "Group Calendar", text });
     } catch (err) {
       if (err.name !== "AbortError") copyText(text);   // AbortError = they closed the sheet
     }
