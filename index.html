@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Trishabel</title>
-  <link rel="stylesheet" href="styles.css?v=3">
+  <link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
   <header class="topbar">
@@ -18,8 +18,18 @@
         <h2>Upcoming</h2>
         <p id="summary" class="summary" aria-live="polite"></p>
       </div>
-      <button id="add-btn" class="btn btn-primary" type="button">Add</button>
+      <div class="head-actions">
+        <button id="share-btn" class="btn" type="button">Share</button>
+        <button id="add-btn" class="btn" type="button">Add with details</button>
+      </div>
     </div>
+
+    <form id="quick-form" class="quick" novalidate>
+      <label class="sr-only" for="quick-input">Quick add</label>
+      <input id="quick-input" type="text" maxlength="120" autocomplete="off" placeholder="Quick add: ERD report fri">
+      <button class="btn btn-primary" type="submit">Add</button>
+    </form>
+    <p id="quick-note" class="hint" role="status"></p>
 
     <section id="next-up" class="next-up" aria-label="Next up" hidden></section>
 
@@ -69,6 +79,6 @@
     </form>
   </dialog>
 
-  <script src="app.js?v=3"></script>
+  <script src="app.js?v=4"></script>
 </body>
 </html>

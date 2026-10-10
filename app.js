@@ -323,5 +323,185 @@ deleteBtn.addEventListener("click", () => {
 document.getElementById("cancel-btn").addEventListener("click", () => dialog.close());
 document.getElementById("add-btn").addEventListener("click", () => openEditor());
 
-// ---------- 7. START ----------
+// ---------- 7. QUICK ADD ----------
+// Type "ERD report fri" or "birthday oct 20 #personal". We find the date words,
+// pull them out, and whatever is left becomes the title.
+const MONTH_RE = "(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)";
+const WEEKDAY_RE = "(sun(?:day)?|mon(?:day)?|tue(?:s(?:day)?)?|wed(?:nesday)?|thu(?:r(?:s(?:day)?)?)?|fri(?:day)?|sat(?:urday)?)";
+const MONTH_NAMES = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+const DAY_NAMES = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+
+function startOfToday() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function shiftDays(days) {
+  const d = startOfToday();
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+function monthIndex(name) {
+  return MONTH_NAMES.indexOf(name.slice(0, 3).toLowerCase());
+}
+
+// "oct 20" -> the next October 20 (this year, or next year if it already passed)
+function buildDate(month, day) {
+  const today = startOfToday();
+  let d = new Date(today.getFullYear(), month, day);
+  if (d.getMonth() !== month) return null;           // "feb 30" does not exist
+  if (d < today) {
+    d = new Date(today.getFullYear() + 1, month, day);
+    if (d.getMonth() !== month) return null;
+  }
+  return d;
+}
+
+// Each rule: a pattern to look for, and how to turn the match into a Date.
+// The first rule that matches wins, so the order matters.
+const DATE_RULES = [
+  { re: /\b(\d{4})-(\d{2})-(\d{2})\b/,
+    toDate: (m) => { const d = new Date(+m[1], +m[2] - 1, +m[3]); return d.getMonth() === +m[2] - 1 ? d : null; } },
+  { re: /\bin (\d+) (day|week)s?\b/i,
+    toDate: (m) => shiftDays(+m[1] * (m[2].toLowerCase() === "week" ? 7 : 1)) },
+  { re: /\bnext week\b/i,
+    toDate: () => shiftDays(7) },
+  { re: /\btoday\b/i,
+    toDate: () => shiftDays(0) },
+  { re: /\b(tomorrow|tmrw)\b/i,
+    toDate: () => shiftDays(1) },
+  { re: new RegExp(`\\b${MONTH_RE}\\.? (\\d{1,2})(?:st|nd|rd|th)?\\b`, "i"),
+    toDate: (m) => buildDate(monthIndex(m[1]), +m[2]) },
+  { re: new RegExp(`\\b(\\d{1,2})(?:st|nd|rd|th)? ${MONTH_RE}\\b`, "i"),
+    toDate: (m) => buildDate(monthIndex(m[2]), +m[1]) },
+  { re: new RegExp(`\\b(?:next )?${WEEKDAY_RE}\\b`, "i"),
+    toDate: (m) => {
+      const target = DAY_NAMES.indexOf(m[1].slice(0, 3).toLowerCase());
+      let diff = (target - startOfToday().getDay() + 7) % 7;
+      if (diff === 0) diff = 7;                      // "fri" typed on a Friday means next Friday
+      return shiftDays(diff);
+    } },
+];
+
+function parseQuickAdd(input) {
+  let text = input.trim();
+  let category = null;
+
+  // "#personal" or "#p" picks a category
+  text = text.replace(/#(\w+)/g, (match, tag) => {
+    const found = CATEGORIES.find((c) => c.toLowerCase().startsWith(tag.toLowerCase()));
+    if (!found) return match;
+    category = found;
+    return "";
+  });
+
+  let due = null;
+  for (const rule of DATE_RULES) {
+    const m = text.match(rule.re);
+    if (!m) continue;
+    const date = rule.toDate(m);
+    if (!date) continue;
+    due = toISODate(date);
+    text = text.replace(m[0], " ");
+    break;
+  }
+
+  const title = text
+    .replace(/\s+/g, " ")
+    .replace(/\b(by|on|due|until)\s*$/i, "")           // "report by fri" -> "report"
+    .trim()
+    .slice(0, 80);
+
+  if (!title) return { error: "Add what it is, for example: ERD report fri" };
+  if (!due) return { error: "Add a date: fri, tomorrow, oct 20, or in 3 days" };
+  return { title, due, category };
+}
+
+function shortDate(iso) {
+  return parseISODate(iso).toLocaleDateString("en-PH", {
+    weekday: "short", month: "short", day: "numeric",
+  });
+}
+
+// One line of feedback under the input. It resets to the hint after a few seconds.
+const noteEl = document.getElementById("quick-note");
+const DEFAULT_NOTE = 'Try "ERD report fri", "quiz in 3 days" or "birthday oct 20 #personal"';
+let noteTimer = null;
+
+function setNote(message, isError = false) {
+  noteEl.textContent = message;
+  noteEl.classList.toggle("is-error", isError);
+  clearTimeout(noteTimer);
+  noteTimer = setTimeout(() => {
+    noteEl.textContent = DEFAULT_NOTE;
+    noteEl.classList.remove("is-error");
+  }, 7000);
+}
+noteEl.textContent = DEFAULT_NOTE;
+
+const quickForm = document.getElementById("quick-form");
+const quickInput = document.getElementById("quick-input");
+
+quickForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const result = parseQuickAdd(quickInput.value);
+
+  if (result.error) {
+    setNote(result.error, true);
+    quickInput.focus();
+    return;
+  }
+
+  const category = result.category || (activeFilter === "All" ? "Other" : activeFilter);
+  deadlines.push({ id: newId(), title: result.title, category, due: result.due, note: "", done: false });
+  persist();
+  quickInput.value = "";
+  render();
+  setNote(`Added "${result.title}" for ${shortDate(result.due)}. Wrong? Tap Edit on it.`);
+  quickInput.focus();                                // ready for the next one
+});
+
+// ---------- 8. SHARE TO GROUP CHAT ----------
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    setNote("Copied. Paste it into your group chat.");
+  } catch {
+    window.prompt("Copy this, then paste it into your group chat:", text);
+  }
+}
+
+async function shareList() {
+  const items = deadlines
+    .filter((d) => !d.done && (activeFilter === "All" || d.category === activeFilter))
+    .sort(byDate)
+    .slice(0, 10);
+
+  if (items.length === 0) {
+    setNote("Nothing to share yet. Add a deadline first.", true);
+    return;
+  }
+
+  const heading = activeFilter === "All" ? "Coming up:" : `Coming up (${activeFilter}):`;
+  const lines = items.map((d) =>
+    `• ${d.title}, ${shortDate(d.due)}${daysUntil(d.due) < 0 ? " (overdue)" : ""}`);
+  const text = [heading, ...lines].join("\n");
+  const url = location.href.split(/[?#]/)[0];
+
+  if (navigator.share) {                              // phones: opens the share sheet (Messenger, Viber...)
+    try {
+      await navigator.share({ title: "Trishabel", text, url });
+    } catch (err) {
+      if (err.name !== "AbortError") copyText(`${text}\n${url}`);   // AbortError = they closed the sheet
+    }
+    return;
+  }
+  copyText(`${text}\n${url}`);                        // laptops: copy to clipboard
+}
+
+document.getElementById("share-btn").addEventListener("click", shareList);
+
+// ---------- 9. START ----------
 render();
