@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Trishabel</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
   <header class="topbar">
     <h1>Trishabel</h1>
- <p class="topbar-sub">Your deadlines and events, in one place</p>
+    <p class="topbar-sub">Your deadlines and events, in one place</p>
   </header>
 
   <main class="container">
@@ -20,6 +20,8 @@
       </div>
       <button id="add-btn" class="btn btn-primary" type="button">Add</button>
     </div>
+
+    <section id="next-up" class="next-up" aria-label="Next up" hidden></section>
 
     <div id="filters" class="filters" role="group" aria-label="Filter by category"></div>
 
@@ -67,6 +69,6 @@
     </form>
   </dialog>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>

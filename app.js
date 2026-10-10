@@ -67,6 +67,23 @@ function newId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
+function addDays(days) {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + days);
+  return toISODate(d);                               // e.g. "2026-10-11"
+}
+
+function countdownText(iso) {
+  const days = daysUntil(iso);
+  if (days < 0)   return `${-days} day${days === -1 ? "" : "s"} overdue`;
+  if (days === 0) return "Due today";
+  if (days === 1) return "Due tomorrow";
+  return `Due in ${days} days`;
+}
+
+const byDate = (a, b) => a.due.localeCompare(b.due) || a.title.localeCompare(b.title);
+
 // ---------- 4. RENDER ----------
 const listEl = document.getElementById("deadline-list");
 const emptyEl = document.getElementById("empty-state");
@@ -74,6 +91,55 @@ const emptyTitleEl = document.getElementById("empty-title");
 const emptyTextEl = document.getElementById("empty-text");
 const summaryEl = document.getElementById("summary");
 const filtersEl = document.getElementById("filters");
+const nextUpEl = document.getElementById("next-up");
+
+// "Move to: Tomorrow | Next week" buttons, reused on the card and on overdue items
+function rescheduleGroup(item) {
+  const group = el("div", "reschedule");
+  group.append(el("span", "", "Move to"));
+  [["Tomorrow", 1], ["Next week", 7]].forEach(([label, days]) => {
+    const btn = el("button", "mini-btn", label);
+    btn.type = "button";
+    btn.setAttribute("aria-label", `Move "${item.title}" to ${label.toLowerCase()}`);
+    btn.addEventListener("click", () => reschedule(item.id, days));
+    group.append(btn);
+  });
+  return group;
+}
+
+function renderNextUp() {
+  nextUpEl.innerHTML = "";
+
+  if (deadlines.length === 0) {
+    nextUpEl.hidden = true;
+    return;
+  }
+  nextUpEl.hidden = false;
+
+  // The most urgent unfinished item, ignoring the category filter
+  const item = deadlines.filter((d) => !d.done).sort(byDate)[0];
+
+  if (!item) {
+    nextUpEl.className = "next-up is-clear";
+    nextUpEl.append(el("p", "next-up-title", "All done. Take a break."));
+    return;
+  }
+
+  const due = describeDue(item.due);
+  nextUpEl.className = "next-up " + due.level;
+
+  nextUpEl.append(el("p", "next-up-label", "Next up"));
+  nextUpEl.append(el("p", "next-up-title", item.title));
+  nextUpEl.append(el("p", "next-up-when", countdownText(item.due)));
+  nextUpEl.append(el("p", "next-up-meta", `${item.category}, ${due.text.replace(/^(Due|Overdue, was) /, "")}`));
+
+  const actions = el("div", "next-up-actions");
+  const doneBtn = el("button", "btn btn-primary", "Mark done");
+  doneBtn.type = "button";
+  doneBtn.addEventListener("click", () => toggleDone(item.id));
+  actions.append(doneBtn, rescheduleGroup(item));
+  nextUpEl.append(actions);
+}
 
 function renderFilters() {
   filtersEl.innerHTML = "";
@@ -91,6 +157,7 @@ function renderFilters() {
 
 function render() {
   renderFilters();
+  renderNextUp();
   listEl.innerHTML = "";
 
   const remaining = deadlines.filter((d) => !d.done).length;
@@ -135,6 +202,8 @@ function render() {
     if (item.note) body.append(el("div", "deadline-note", item.note));
     body.append(el("span", "badge " + (item.done ? "" : due.level), item.done ? "Done" : due.text));
 
+    if (!item.done && daysUntil(item.due) < 0) body.append(rescheduleGroup(item));
+
     // Edit button
     const edit = el("button", "edit-btn", "Edit");
     edit.type = "button";
@@ -151,6 +220,14 @@ function toggleDone(id) {
   const item = deadlines.find((d) => d.id === id);
   if (!item) return;
   item.done = !item.done;
+  persist();
+  render();
+}
+
+function reschedule(id, daysFromToday) {
+  const item = deadlines.find((d) => d.id === id);
+  if (!item) return;
+  item.due = addDays(daysFromToday);                 // counted from today, not from the old date
   persist();
   render();
 }

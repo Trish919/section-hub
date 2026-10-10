@@ -225,3 +225,48 @@ dialog h2 { font-size: 1.125rem; margin-bottom: var(--space-2); }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
+
+/* ---------- Milestone 3: Next up card + reschedule ---------- */
+.next-up {
+  background: var(--purple-100);
+  border: 1px solid var(--purple-200);
+  border-radius: var(--radius);
+  padding: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.next-up-label { font-size: 0.8125rem; color: var(--ink-soft); }
+.next-up-title { font-size: 1.25rem; font-weight: 700; overflow-wrap: anywhere; }
+.next-up-when { font-weight: 600; }
+.next-up.late .next-up-when { color: var(--late-ink); }
+.next-up-meta { font-size: 0.875rem; color: var(--ink-soft); }
+.next-up-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  margin-top: var(--space-2);
+}
+.next-up.is-clear .next-up-title { font-size: 1.125rem; }
+
+.reschedule {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+  margin-top: 0.375rem;
+}
+.next-up-actions .reschedule { margin-top: 0; }
+.mini-btn {
+  font: inherit;
+  font-size: 0.875rem;
+  min-height: 40px;
+  padding: 0 0.875rem;
+  border: 1px solid var(--purple-300);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+.mini-btn:hover { background: var(--purple-200); }
