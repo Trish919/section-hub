@@ -3,30 +3,69 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Section Hub</title>
+  <title>Trishabel</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header class="topbar">
-    <h1>Section Hub</h1>
-    <p class="topbar-sub">Deadlines for your section, in one place</p>
+    <h1>Trishabel</h1>
+    <p class="topbar-sub">Your deadlines and events, in one place</p>
   </header>
 
   <main class="container">
-    <section aria-labelledby="deadlines-title">
-      <div class="section-head">
-        <h2 id="deadlines-title">Deadlines</h2>
+    <div class="section-head">
+      <div>
+        <h2>Upcoming</h2>
         <p id="summary" class="summary" aria-live="polite"></p>
       </div>
+      <button id="add-btn" class="btn btn-primary" type="button">Add</button>
+    </div>
 
-      <ul id="deadline-list" class="deadline-list"></ul>
+    <div id="filters" class="filters" role="group" aria-label="Filter by category"></div>
 
-      <div id="empty-state" class="empty" hidden>
-        <p><strong>No deadlines yet.</strong></p>
-        <p>When your officer adds one, it will show up here.</p>
-      </div>
-    </section>
+    <ul id="deadline-list" class="deadline-list"></ul>
+
+    <div id="empty-state" class="empty" hidden>
+      <p id="empty-title" class="empty-title"></p>
+      <p id="empty-text"></p>
+    </div>
   </main>
+
+  <!-- Add / edit form. <dialog> is built into the browser: it handles focus and the Esc key for us. -->
+  <dialog id="editor" aria-labelledby="dialog-title">
+    <form id="form" novalidate>
+      <h2 id="dialog-title">Add deadline</h2>
+
+      <label class="field">
+        <span>Title</span>
+        <input id="title" type="text" maxlength="80" required placeholder="e.g. Submit ERD, Mom's birthday">
+      </label>
+
+      <label class="field">
+        <span>Category</span>
+        <select id="category"></select>
+      </label>
+
+      <label class="field">
+        <span>Due date</span>
+        <input id="due" type="date" required>
+      </label>
+
+      <label class="field">
+        <span>Note (optional)</span>
+        <textarea id="note" rows="2" maxlength="200"></textarea>
+      </label>
+
+      <p id="error" class="error" role="alert" hidden></p>
+
+      <div class="actions">
+        <button id="delete-btn" class="btn btn-danger" type="button" hidden>Delete</button>
+        <span class="spacer"></span>
+        <button id="cancel-btn" class="btn" type="button">Cancel</button>
+        <button class="btn btn-primary" type="submit">Save</button>
+      </div>
+    </form>
+  </dialog>
 
   <script src="app.js"></script>
 </body>

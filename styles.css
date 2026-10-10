@@ -1,22 +1,23 @@
-/* ---------- Design tokens: change these and the whole site changes ---------- */
+/* ---------- Design tokens: white + pastel purple, minimal ---------- */
 :root {
-  --bg: #f2f5f7;
+  --bg: #faf8ff;
   --surface: #ffffff;
-  --ink: #14212b;
-  --ink-soft: #546270;
-  --line: #d9e0e6;
-  --accent: #1b4fd1;
-  --accent-ink: #ffffff;
-  --warn-bg: #fff3c4;
-  --warn-ink: #6b4e00;
-  --late-bg: #fde4e1;
-  --late-ink: #8f1d12;
-  --done: #2e7d4f;
+  --ink: #2b2540;
+  --ink-soft: #756d8c;
+  --line: #ebe6f7;
+
+  --purple-100: #f3effd;
+  --purple-200: #e4dbf8;
+  --purple-300: #cfc0f3;   /* main pastel accent */
+  --purple-600: #6a4fc7;   /* darker purple for focus + links (readable on white) */
+
+  --late-bg: #fdeef2;
+  --late-ink: #a8305a;
 
   --space-1: 0.5rem;
   --space-2: 1rem;
   --space-3: 1.5rem;
-  --radius: 10px;
+  --radius: 12px;
   --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
@@ -30,20 +31,20 @@ body {
   color: var(--ink);
   line-height: 1.5;
 }
-
 h1, h2, p { margin: 0; }
+[hidden] { display: none !important; }
 
-/* ---------- Layout (mobile first: this is the default) ---------- */
+/* ---------- Layout (mobile first) ---------- */
 .topbar {
-  background: var(--ink);
-  color: #fff;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
   padding: var(--space-2);
 }
 .topbar h1 { font-size: 1.25rem; }
-.topbar-sub { font-size: 0.875rem; color: #b8c4cf; }
+.topbar-sub { font-size: 0.875rem; color: var(--ink-soft); }
 
 .container {
-  max-width: 40rem;          /* keeps lines readable on laptops */
+  max-width: 40rem;
   margin: 0 auto;
   padding: var(--space-2);
 }
@@ -51,11 +52,55 @@ h1, h2, p { margin: 0; }
 .section-head {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   margin-bottom: var(--space-2);
 }
 .section-head h2 { font-size: 1.125rem; }
 .summary { font-size: 0.875rem; color: var(--ink-soft); }
+
+/* ---------- Buttons ---------- */
+.btn {
+  font: inherit;
+  min-height: 44px;                 /* touch-friendly */
+  padding: 0 var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+.btn:hover { background: var(--purple-100); }
+.btn-primary { background: var(--purple-300); border-color: var(--purple-300); font-weight: 600; }
+.btn-primary:hover { background: var(--purple-200); }
+.btn-danger { color: var(--late-ink); border-color: transparent; background: transparent; }
+.btn-danger:hover { background: var(--late-bg); }
+
+/* ---------- Filter chips ---------- */
+.filters {
+  display: flex;
+  gap: var(--space-1);
+  overflow-x: auto;                 /* chips scroll sideways on small phones */
+  padding-bottom: var(--space-1);
+  margin-bottom: var(--space-2);
+}
+.chip {
+  font: inherit;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+  min-height: 36px;
+  padding: 0 0.875rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.chip[aria-pressed="true"] {
+  background: var(--purple-200);
+  border-color: var(--purple-200);
+  color: var(--ink);
+  font-weight: 600;
+}
 
 /* ---------- Deadline cards ---------- */
 .deadline-list {
@@ -65,71 +110,118 @@ h1, h2, p { margin: 0; }
   display: grid;
   gap: var(--space-1);
 }
-
 .deadline {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-1);
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
+  padding: var(--space-1) var(--space-1) var(--space-1) 0;
 }
 
-/* The whole row is a <label>, so tapping anywhere toggles the checkbox */
-.deadline label {
-  display: flex;
-  gap: var(--space-2);
-  align-items: flex-start;
-  padding: var(--space-2);
-  min-height: 48px;          /* comfortable touch target */
+/* The checkbox sits inside a label that is 48px wide, so it is easy to tap */
+.check {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  min-height: 48px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.check input {
+  width: 1.375rem;
+  height: 1.375rem;
+  accent-color: var(--purple-600);
   cursor: pointer;
 }
 
-.deadline input[type="checkbox"] {
-  width: 1.5rem;
-  height: 1.5rem;
-  margin-top: 0.1rem;
-  accent-color: var(--done);
-  flex-shrink: 0;
-}
-
-.deadline-body { flex: 1; min-width: 0; }
-.deadline-subject { font-size: 0.8125rem; color: var(--ink-soft); }
-.deadline-title { font-weight: 600; }
+.deadline-body { flex: 1; min-width: 0; padding: 0.375rem 0; }
+.deadline-meta { font-size: 0.8125rem; color: var(--ink-soft); }
+.deadline-title { font-weight: 600; overflow-wrap: anywhere; }
+.deadline-note { font-size: 0.875rem; color: var(--ink-soft); overflow-wrap: anywhere; }
 
 .badge {
   display: inline-block;
   margin-top: 0.25rem;
-  padding: 0.125rem 0.5rem;
+  padding: 0.125rem 0.625rem;
   border-radius: 999px;
   font-size: 0.8125rem;
-  background: var(--bg);
+  background: var(--purple-100);
   color: var(--ink-soft);
 }
-.badge.soon { background: var(--warn-bg); color: var(--warn-ink); }
+.badge.soon { background: var(--purple-200); color: var(--ink); }
 .badge.late { background: var(--late-bg); color: var(--late-ink); }
 
-.deadline.is-done .deadline-title {
-  text-decoration: line-through;
-  color: var(--ink-soft);
+.edit-btn {
+  font: inherit;
+  font-size: 0.875rem;
+  min-height: 44px;
+  padding: 0 0.75rem;
+  border: 0;
+  background: transparent;
+  color: var(--purple-600);
+  cursor: pointer;
+  border-radius: 8px;
 }
-.deadline.is-done .badge { background: #e3f1e8; color: var(--done); }
+.edit-btn:hover { background: var(--purple-100); }
+
+.deadline.is-done .deadline-title { text-decoration: line-through; color: var(--ink-soft); font-weight: 500; }
+.deadline.is-done .badge { background: transparent; padding-left: 0; }
 
 /* ---------- Empty state ---------- */
 .empty {
   text-align: center;
   padding: var(--space-3);
-  border: 1px dashed var(--line);
+  border: 1px dashed var(--purple-300);
   border-radius: var(--radius);
   color: var(--ink-soft);
 }
+.empty-title { color: var(--ink); font-weight: 600; }
 
-/* ---------- Keyboard focus: visible for laptop users ---------- */
-:focus-visible {
-  outline: 3px solid var(--accent);
-  outline-offset: 2px;
+/* ---------- Dialog / form ---------- */
+dialog {
+  width: calc(100% - 2rem);
+  max-width: 26rem;
+  border: 0;
+  border-radius: var(--radius);
+  padding: var(--space-3);
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: 0 10px 40px rgba(60, 40, 120, 0.18);
 }
+dialog::backdrop { background: rgba(43, 37, 64, 0.35); }
+dialog h2 { font-size: 1.125rem; margin-bottom: var(--space-2); }
+
+.field { display: block; margin-bottom: var(--space-2); }
+.field span { display: block; font-size: 0.875rem; color: var(--ink-soft); margin-bottom: 0.25rem; }
+.field input, .field select, .field textarea {
+  width: 100%;
+  font: inherit;
+  font-size: 1rem;                  /* 16px stops iPhones from zooming in on focus */
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+}
+.field textarea { resize: vertical; }
+
+.error { color: var(--late-ink); font-size: 0.875rem; margin-bottom: var(--space-2); }
+
+.actions { display: flex; align-items: center; gap: var(--space-1); }
+.spacer { flex: 1; }
+
+/* ---------- Keyboard focus ---------- */
+:focus-visible { outline: 3px solid var(--purple-600); outline-offset: 2px; }
 
 /* ---------- Larger screens ---------- */
 @media (min-width: 768px) {
   .topbar { padding: var(--space-3); }
   .topbar h1 { font-size: 1.5rem; }
   .container { padding: var(--space-3); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
 }
