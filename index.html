@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Section Hub</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>Section Hub</h1>
+    <p class="topbar-sub">Deadlines for your section, in one place</p>
+  </header>
+
+  <main class="container">
+    <section aria-labelledby="deadlines-title">
+      <div class="section-head">
+        <h2 id="deadlines-title">Deadlines</h2>
+        <p id="summary" class="summary" aria-live="polite"></p>
+      </div>
+
+      <ul id="deadline-list" class="deadline-list"></ul>
+
+      <div id="empty-state" class="empty" hidden>
+        <p><strong>No deadlines yet.</strong></p>
+        <p>When your officer adds one, it will show up here.</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
